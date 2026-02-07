@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { scrypt } from 'crypto';
+import { randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 
 const scryptAsync = promisify(scrypt);
@@ -12,8 +12,8 @@ export class UsersService {
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
 
   async create(email: string, password: string) {
-    const salt = 'salt';
-    const hash = (await scryptAsync(password, salt, 64)) as Buffer;
+    const salt = randomBytes(8).toString('hex');
+    const hash = (await scryptAsync(password, salt, 100)) as Buffer;
     const result = salt + '.' + hash.toString('hex');
     const user = this.repo.create({ email, password: result });
     console.log({ user });
